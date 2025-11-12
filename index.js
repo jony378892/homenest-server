@@ -121,6 +121,24 @@ async function run() {
       res.send(result);
     });
 
+    app.post("/delete-property/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const { email } = req.body;
+      const existProperty = await propertiesCollection.findOne(query);
+
+      if (req.token_email !== email) {
+        return res.send({ message: "Unauthorized access" });
+      }
+
+      if (!existProperty) {
+        res.send({ message: "The property not found" });
+      } else {
+        const result = await propertiesCollection.deleteOne(query);
+        res.send(result);
+      }
+    });
+
     console.log("Successfully connected to mongoDB");
   } finally {
     // It will be empty
