@@ -73,6 +73,54 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/properties", async (req, res) => {
+      const cursor = propertiesCollection.find({});
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.get("/latest-properties", async (req, res) => {
+      const cursor = propertiesCollection.find();
+      const result = await cursor.sort({ inserted_at: -1 }).limit(6).toArray();
+      res.send(result);
+    });
+
+    app.post("/add-property", verifyToken, async (req, res) => {
+      const property = req.body;
+      try {
+        if (req.token_email === property.email) {
+          const result = await propertiesCollection.insertOne(property);
+          return res.send(result);
+        } else {
+          return res.send({ message: "Unauthorized access" });
+        }
+      } catch (error) {
+        console.log(error.message);
+      }
+    });
+
+    app.get("/property/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await propertiesCollection.findOne({ query });
+      res.send(result);
+    });
+
+    app.post("/property/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $set: req.body,
+      };
+      const options = {};
+      const result = await propertiesCollection.updateOne(
+        query,
+        update,
+        options
+      );
+      res.send(result);
+    });
+
     console.log("Successfully connected to mongoDB");
   } finally {
     // It will be empty
