@@ -47,10 +47,6 @@ const client = new MongoClient(uri, {
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.json({ message: "Get request was successful" });
-});
-
 async function run() {
   try {
     await client.connect();
@@ -142,6 +138,19 @@ async function run() {
 
     app.get("/ratings", async (req, res) => {
       const cursor = ratingsCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.get("/ratings", verifyToken, async (req, res) => {
+      const email = req.query.email;
+      console.log(email);
+      const query = { email };
+      const cursor = ratingsCollection.find(query);
+      if (req.token_email !== email) {
+        return res.status(403).send({ message: "Forbidden" });
+      }
+
       const result = await cursor.toArray();
       res.send(result);
     });
