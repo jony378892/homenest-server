@@ -55,6 +55,7 @@ async function run() {
     const usersCollection = db.collection("users");
     const propertiesCollection = db.collection("properties");
     const ratingsCollection = db.collection("ratings");
+    const citiesCollection = db.collection("cities");
 
     app.post("/users", async (req, res) => {
       const data = req.body;
@@ -67,6 +68,12 @@ async function run() {
       }
 
       const result = await usersCollection.insertOne(data);
+      res.send(result);
+    });
+
+    app.get("/cities", async (req, res) => {
+      const cursor = citiesCollection.find();
+      const result = await cursor.toArray();
       res.send(result);
     });
 
