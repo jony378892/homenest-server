@@ -1,8 +1,8 @@
-import express, { json } from "express";
+import express from "express";
 import fs from "fs";
 import cors from "cors";
 import dotenv from "dotenv";
-import { MongoClient, ServerApiVersion } from "mongodb";
+import { MongoClient, ObjectId, ServerApiVersion } from "mongodb";
 import admin from "firebase-admin";
 
 dotenv.config();
@@ -20,14 +20,15 @@ const verifyToken = async (req, res, next) => {
   const token = authorization.split(" ")[1];
 
   if (!token || !authorization) {
-    return res.status(401).send({ message: "Unauthorized access" });
+    return res.status(403).send({ message: "Unauthorized access" });
   }
 
   try {
-    await admin.auth().verifyIdToken(token);
+    const decode = await admin.auth().verifyIdToken(token);
+    req.token_email = decode.email;
     next();
   } catch (error) {
-    res.status(402).send({ message: "Forbidden" });
+    res.status(403).send({ message: "Forbidden" });
   }
 };
 
@@ -53,17 +54,33 @@ app.get("/", (req, res) => {
 async function run() {
   try {
     await client.connect();
-    console.log("Successfully connected to mongoDB");
 
-    const db = client.db("northern");
+    const db = client.db("homenest");
     const usersCollection = db.collection("users");
+    const propertiesCollection = db.collection("properties");
+
+    app.post("/users", async (req, res) => {
+      const data = req.body;
+
+      const query = { email: data.email };
+      const existedUser = await usersCollection.findOne(query);
+
+      if (existedUser) {
+        return res.send({ message: "User already exist" });
+      }
+
+      const result = await usersCollection.insertOne(data);
+      res.send(result);
+    });
+
+    console.log("Successfully connected to mongoDB");
   } finally {
-    // No need to edit this
+    // It will be empty
   }
 }
 
 run().catch(console.dir);
 
-app.listen(3000, () => {
+app.listen(port, () => {
   console.log("Server is running on port: ", port);
 });
