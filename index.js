@@ -58,6 +58,7 @@ async function run() {
     const db = client.db("homenest");
     const usersCollection = db.collection("users");
     const propertiesCollection = db.collection("properties");
+    const ratingsCollection = db.collection("ratings");
 
     app.post("/users", async (req, res) => {
       const data = req.body;
@@ -137,6 +138,12 @@ async function run() {
         const result = await propertiesCollection.deleteOne(query);
         res.send(result);
       }
+    });
+
+    app.get("/ratings", async (req, res) => {
+      const cursor = ratingsCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
     });
 
     console.log("Successfully connected to mongoDB");
