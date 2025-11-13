@@ -21,13 +21,13 @@ const client = new MongoClient(uri, {
 app.use(cors());
 app.use(express.json());
 
-app.use("/", (req, res) => {
+app.get("/", (req, res) => {
   res.send("Server is ok");
 });
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
 
     const db = client.db("homenest");
     const usersCollection = db.collection("users");
