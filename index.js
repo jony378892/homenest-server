@@ -152,19 +152,41 @@ async function run() {
       }
     });
 
-    app.get("/ratings", async (req, res) => {
-      const email = req.query.email;
-      const query = { email };
-      const cursor = ratingsCollection.find(query);
+    app.post("/ratings", async (req, res) => {
+      try {
+        const {
+          userEmail,
+          userName,
+          propertyName,
+          rating,
+          feedback,
+          createdAt,
+          image,
+        } = req.body;
 
-      const result = await cursor.toArray();
-      res.send(result);
+        const newFeedback = {
+          propertyName,
+          image,
+          userEmail,
+          userName,
+          rating,
+          feedback,
+          createdAt,
+        };
+
+        const result = await ratingsCollection.insertOne(newFeedback);
+        res.send(result);
+      } catch (error) {
+        res.send({ message: error.message });
+      }
     });
 
-    app.post("/ratings", async (req, res) => {
-      const data = req.body;
-      const result = await ratingsCollection.insertOne(data);
-      res.send(result);
+    app.get("/ratings/:email", async (req, res) => {
+      const email = req.params.email;
+      // console.log(email);
+      const cursor = ratingsCollection.find({ userEmail: email });
+      const ratings = await cursor.toArray();
+      res.send(ratings);
     });
 
     console.log("Successfully connected to mongoDB");
